@@ -474,7 +474,7 @@ function pushBlock(startPos, endPos) {
         width: 64,
         height: 48,
         x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
-        y: Math.floor(Math.random()*((height - 100)-0+1)+0)
+        y: Math.floor(Math.random()*((height - 48)-0+1)+0)
     });
 
     blocks[blocks.length - 1].image.src = "/images/block.png";
