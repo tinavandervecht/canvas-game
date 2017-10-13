@@ -27,6 +27,7 @@ var deathPosition         = 0;
 var bounce                = true;
 var continueCountdown     = 0;
 var gameover              = false;
+var blocks                = [];
 canvas.width              = width;
 canvas.height             = height;
 
@@ -36,7 +37,7 @@ var backgroundImage       = {
     x: 0,
     freeze: false
 }
-backgroundImage.image.src = "/images/water.png";
+backgroundImage.image.src = "/images/water-faded.png";
 
 // player data
 var player                = {
@@ -91,6 +92,8 @@ ctx.fillText("Oh Shit", width/2, height/2);
 ctx.font = "20px Arial";
 ctx.fillText("Press Enter To Start", width/2, height/2 + 50);
 
+generateBlocksArray();
+
 
 // Event Listeners
 document.body.addEventListener("keydown", function(e) {
@@ -108,7 +111,7 @@ document.body.addEventListener("keyup", function(e) {
 // Functions
 function checkShouldStartGame() {
     if (keys[13]) {
-        startGame = true;
+        gameStarted = true;
         render();
     }
 }
@@ -165,7 +168,6 @@ function movePlayer(){
         player.x = width-player.width;
     } else if (player.x <= 0) {
         killPlayer();
-        player.x = 0;
     }
 
     render();
@@ -178,6 +180,7 @@ function render() {
 
     if (player.alive) {
         animateCharacter();
+        renderBlocks();
         requestAnimationFrame(movePlayer);
     } else if(gameover) {
         ctx.font = "50px Impact";
@@ -185,12 +188,14 @@ function render() {
         ctx.textAlign = "center";
         ctx.fillText('Game Over!', width/2, height/2);
         renderCharacterDeath();
+        renderBlocks(false);
         requestAnimationFrame(animateDeathSequence);
     } else if(continueCountdown > 0) {
         animateCharacter();
         renderCountDown();
     } else {
         renderCharacterDeath();
+        renderBlocks(false);
         requestAnimationFrame(animateDeathSequence);
     }
 
@@ -246,6 +251,50 @@ function renderCountDown() {
         render();
     },1000);
 
+}
+
+function renderBlocks(animateBlocks = true) {
+    for (var i = 0; i < blocks.length; i++) {
+        var posX = animateBlocks ? blocks[i].x-- : blocks[i].x;
+        ctx.drawImage(
+            blocks[i].image,
+            0,
+            0,
+            blocks[i].width,
+            blocks[i].height,
+            posX,
+            blocks[i].y,
+            blocks[i].width,
+            blocks[i].height
+        );
+
+        if (posX + blocks[i].width <= 0) {
+            blocks.splice(i, 1);
+            var startPos = blocks[blocks.length - 1].x + 100;
+            var endPos = blocks[blocks.length - 1].x + blocks[blocks.length - 1].width + 50;
+            pushBlock(startPos, endPos);
+        }
+    }
+}
+
+function generateBlocksArray() {
+    for (var i = 0; i < 20; i++) {
+        var startPos = blocks[i - 1] ? blocks[i - 1].x + 100 : 100;
+        var endPos = blocks[i - 1] ? blocks[i - 1].x + blocks[i -1].width + 50 : 150 + 48;
+        pushBlock(startPos, endPos);
+    }
+}
+
+function pushBlock(startPos, endPos) {
+    blocks.push({
+        image: new Image(),
+        width: 64,
+        height: 48,
+        x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
+        y: Math.floor(Math.random()*((height - 100)-0+1)+0)
+    });
+
+    blocks[blocks.length - 1].image.src = "/images/block.png";
 }
 
 function animateCharacter() {
