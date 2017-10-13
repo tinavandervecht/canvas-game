@@ -327,7 +327,7 @@ function animateDeathSequence() {
     if (player.y > deathPosition && player.y > 0 && bounce) {
         player.y--;
     } else {
-        if (gameover || player.y < height) {
+        if (gameover || player.y < deathPosition + 50) {
             bounce = false;
             player.y++;
         } else {
@@ -353,6 +353,7 @@ function killPlayer() {
 
 function zombifyCharacter() {
     backgroundImage.freeze = false;
+    player.facing = 'right';
     player.alive = true;
     bounce = true;
 }
