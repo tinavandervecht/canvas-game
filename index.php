@@ -39,6 +39,13 @@ var backgroundImage       = {
 }
 backgroundImage.image.src = "/images/water-faded.png";
 
+var heartImage            = {
+    image: new Image(),
+    width: 15,
+    height: 12
+}
+heartImage.image.src = "/images/sprites/heart.png";
+
 // player data
 var player                = {
     image: new Image(),
@@ -186,7 +193,6 @@ function movePlayer(){
 function render() {
     ctx.clearRect(0,0,width,height);
     renderBackground();
-    renderHealth();
 
     if (player.alive) {
         animateCharacter();
@@ -210,13 +216,42 @@ function render() {
         renderBlocks(false);
         requestAnimationFrame(animateDeathSequence);
     }
+
+    renderHealth();
+
 }
 
 function renderHealth() {
-    ctx.font = "20px Times New Roman";
-    ctx.fillStyle = "white";
-    ctx.textAlign = "left";
-    ctx.fillText(player.health, 10, 20);
+    var pos = 10;
+    for (var i = 1; i <= 3; i++) {
+        if (i <= player.health) {
+            ctx.drawImage(
+                heartImage.image,
+                heartImage.width,
+                0,
+                heartImage.width,
+                heartImage.height,
+                pos,
+                10,
+                heartImage.width,
+                heartImage.height
+            );
+            pos = pos + 17;
+        } else {
+            ctx.drawImage(
+                heartImage.image,
+                0,
+                0,
+                heartImage.width,
+                heartImage.height,
+                pos,
+                10,
+                heartImage.width,
+                heartImage.height
+            );
+            pos = pos + 17;
+        }
+    }
 }
 
 function renderBackground() {
