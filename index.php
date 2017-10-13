@@ -359,26 +359,20 @@ function renderRupees(animateRupees = true) {
 
 function getAvailableRupeeKeys() {
     if (gameLength > 5000) {
-        console.log('hit 5');
         return 5;
     }
 
     if (gameLength > 3000) {
-        console.log('hit 4');
         return 4;
     }
 
     if (gameLength > 1500) {
-        console.log('hit 3');
         return 3;
     }
 
     if (gameLength > 500) {
-        console.log('hit 2');
         return 2;
     }
-
-    console.log('hit 1');
 
     return 1;
 }
