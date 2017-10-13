@@ -202,9 +202,9 @@ function render() {
         requestAnimationFrame(animateDeathSequence);
     } else if(continueCountdown > 0) {
         checkShouldRemoveBlock();
-        animateCharacter();
         renderBlocks(false);
         renderCountDown();
+        animateCharacter();
     } else {
         renderCharacterDeath();
         renderBlocks(false);
@@ -350,6 +350,7 @@ function animateDeathSequence() {
 }
 
 function killPlayer() {
+    player.facing = 'right';
     backgroundImage.freeze = true;
     player.alive = false;
     player.health--;
@@ -362,7 +363,6 @@ function killPlayer() {
 
 function zombifyCharacter() {
     backgroundImage.freeze = false;
-    player.facing = 'right';
     player.alive = true;
     bounce = true;
 }
