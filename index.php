@@ -116,6 +116,16 @@ function checkShouldStartGame() {
     }
 }
 
+function checkShouldRemoveBlock() {
+    for (var i = 0; i < blocks.length; i++) {
+        var coversX = (player.x > blocks[i].x) && (player.x < blocks[i].x + blocks[i].width);
+        var coversY = (player.y > blocks[i].y) && (player.y < blocks[i].y + blocks[i].height);
+        if (coversX && coversY) {
+            blocks.splice(i, 1);
+        }
+    }
+}
+
 function movePlayer(){
     //up and down
     if (keys[38]) {
@@ -183,23 +193,23 @@ function render() {
         renderBlocks();
         requestAnimationFrame(movePlayer);
     } else if(gameover) {
+        renderBlocks(false);
         ctx.font = "50px Impact";
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
         ctx.fillText('Game Over!', width/2, height/2);
         renderCharacterDeath();
-        renderBlocks(false);
         requestAnimationFrame(animateDeathSequence);
     } else if(continueCountdown > 0) {
+        checkShouldRemoveBlock();
         animateCharacter();
+        renderBlocks(false);
         renderCountDown();
     } else {
         renderCharacterDeath();
         renderBlocks(false);
         requestAnimationFrame(animateDeathSequence);
     }
-
-
 }
 
 function renderHealth() {
@@ -250,7 +260,6 @@ function renderCountDown() {
     window.setTimeout(function() {
         render();
     },1000);
-
 }
 
 function renderBlocks(animateBlocks = true) {
