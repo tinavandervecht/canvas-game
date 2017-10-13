@@ -28,6 +28,8 @@ var bounce                = true;
 var continueCountdown     = 0;
 var gameover              = false;
 var blocks                = [];
+var rupees                = [];
+var score                 = 0;
 canvas.width              = width;
 canvas.height             = height;
 
@@ -45,6 +47,35 @@ var heartImage            = {
     height: 12
 }
 heartImage.image.src = "/images/sprites/heart.png";
+
+var rupeesData            = {
+    image: new Image(),
+    width: 8,
+    height: 14,
+    types: {
+        green: {
+            x: 0,
+            value: 1
+        },
+        blue: {
+            x: 7,
+            value: 5
+        },
+        red: {
+            x: 24,
+            values: 20
+        },
+        purple: {
+            x: 31,
+            values: 50
+        },
+        yellow: {
+            x: 15,
+            values: 200
+        }
+    }
+}
+rupeesData.image.src = "/images/sprites/rupees.png";
 
 // player data
 var player                = {
@@ -100,7 +131,7 @@ ctx.font = "20px Arial";
 ctx.fillText("Press Enter To Start", width/2, height/2 + 50);
 
 generateBlocksArray();
-
+generateRupeesArray();
 
 // Event Listeners
 document.body.addEventListener("keydown", function(e) {
@@ -116,6 +147,7 @@ document.body.addEventListener("keyup", function(e) {
 
 
 // Functions
+// should code _ functions
 function checkShouldStartGame() {
     if (keys[13]) {
         gameStarted = true;
@@ -133,6 +165,7 @@ function checkShouldRemoveBlock() {
     }
 }
 
+// moving functions
 function movePlayer(){
     //up and down
     if (keys[38]) {
@@ -190,6 +223,7 @@ function movePlayer(){
     render();
 }
 
+// render functions
 function render() {
     ctx.clearRect(0,0,width,height);
     renderBackground();
@@ -217,6 +251,7 @@ function render() {
         requestAnimationFrame(animateDeathSequence);
     }
 
+    renderScore();
     renderHealth();
 
 }
@@ -254,6 +289,12 @@ function renderHealth() {
     }
 }
 
+function renderScore() {
+    ctx.font = "24px Impact";
+    ctx.fillStyle = "white";
+    ctx.fillText(score, width - 20, 30);
+}
+
 function renderBackground() {
     ctx.drawImage(backgroundImage.image, backgroundImage.x, 0);
     ctx.drawImage(backgroundImage.image, -width + backgroundImage.x, 0);
@@ -289,7 +330,7 @@ function renderCountDown() {
     continueCountdown--;
 
     if (continueCountdown == 0) {
-        zombifyCharacter();
+        zombifyPlayer();
     }
 
     window.setTimeout(function() {
@@ -297,50 +338,41 @@ function renderCountDown() {
     },1000);
 }
 
-function renderBlocks(animateBlocks = true) {
-    for (var i = 0; i < blocks.length; i++) {
-        var posX = animateBlocks ? blocks[i].x-- : blocks[i].x;
-        ctx.drawImage(
-            blocks[i].image,
-            0,
-            0,
-            blocks[i].width,
-            blocks[i].height,
-            posX,
-            blocks[i].y,
-            blocks[i].width,
-            blocks[i].height
-        );
+// rupee functions
+function renderRupees(animateRupees = true) {
 
-        if (posX + blocks[i].width <= 0) {
-            blocks.splice(i, 1);
-            var startPos = blocks[blocks.length - 1].x + 100;
-            var endPos = blocks[blocks.length - 1].x + blocks[blocks.length - 1].width + 50;
-            pushBlock(startPos, endPos);
+}
+
+function generateRupeesArray() {
+    if (rupees.length == 0) {
+        var maxAmt = Math.floor(Math.random()*(5-0+1)+0);
+
+        for(var i = 0; i < maxAmt; i++) {
+            var startPos = rupees[i - 1] ? rupees[i - 1].x + 100 : 100;
+            var endPos = rupees[i - 1] ? rupees[i - 1].x + rupees[i -1].width + 50 : 150 + 48;
+            // rupees.push({
+            //     x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
+            //     y: Math.floor(Math.random()*((height - 100)-0+1)+0)
+            // });
         }
     }
 }
 
-function generateBlocksArray() {
-    for (var i = 0; i < 20; i++) {
-        var startPos = blocks[i - 1] ? blocks[i - 1].x + 100 : 100;
-        var endPos = blocks[i - 1] ? blocks[i - 1].x + blocks[i -1].width + 50 : 150 + 48;
-        pushBlock(startPos, endPos);
-    }
+function drawRupee(type, posX, posY) {
+    ctx.drawImage(
+        rupeesData.image,
+        rupeesData.types[type].x,
+        0,
+        rupeesData.width,
+        rupeesData.height,
+        posX,
+        posY,
+        rupeesData.width,
+        rupeesData.height
+    );
 }
 
-function pushBlock(startPos, endPos) {
-    blocks.push({
-        image: new Image(),
-        width: 64,
-        height: 48,
-        x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
-        y: Math.floor(Math.random()*((height - 100)-0+1)+0)
-    });
-
-    blocks[blocks.length - 1].image.src = "/images/block.png";
-}
-
+// animation functions
 function animateCharacter() {
     ctx.drawImage(
         player.image,
@@ -384,6 +416,7 @@ function animateDeathSequence() {
     render();
 }
 
+// player life functions
 function killPlayer() {
     player.facing = 'right';
     backgroundImage.freeze = true;
@@ -396,10 +429,55 @@ function killPlayer() {
     }
 }
 
-function zombifyCharacter() {
+function zombifyPlayer() {
     backgroundImage.freeze = false;
     player.alive = true;
     bounce = true;
+}
+
+// block functions
+function generateBlocksArray() {
+    for (var i = 0; i < 20; i++) {
+        var startPos = blocks[i - 1] ? blocks[i - 1].x + 100 : 100;
+        var endPos = blocks[i - 1] ? blocks[i - 1].x + blocks[i -1].width + 50 : 150 + 48;
+        pushBlock(startPos, endPos);
+    }
+}
+
+function renderBlocks(animateBlocks = true) {
+    for (var i = 0; i < blocks.length; i++) {
+        var posX = animateBlocks ? blocks[i].x-- : blocks[i].x;
+        ctx.drawImage(
+            blocks[i].image,
+            0,
+            0,
+            blocks[i].width,
+            blocks[i].height,
+            posX,
+            blocks[i].y,
+            blocks[i].width,
+            blocks[i].height
+        );
+
+        if (posX + blocks[i].width <= 0) {
+            blocks.splice(i, 1);
+            var startPos = blocks[blocks.length - 1].x + 100;
+            var endPos = blocks[blocks.length - 1].x + blocks[blocks.length - 1].width + 50;
+            pushBlock(startPos, endPos);
+        }
+    }
+}
+
+function pushBlock(startPos, endPos) {
+    blocks.push({
+        image: new Image(),
+        width: 64,
+        height: 48,
+        x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
+        y: Math.floor(Math.random()*((height - 100)-0+1)+0)
+    });
+
+    blocks[blocks.length - 1].image.src = "/images/block.png";
 }
 
 
