@@ -30,6 +30,7 @@ var gameover              = false;
 var blocks                = [];
 var rupees                = [];
 var score                 = 0;
+var gameLength            = 0;
 canvas.width              = width;
 canvas.height             = height;
 
@@ -53,26 +54,11 @@ var rupeesData            = {
     width: 8,
     height: 14,
     types: {
-        green: {
-            x: 0,
-            value: 1
-        },
-        blue: {
-            x: 7,
-            value: 5
-        },
-        red: {
-            x: 24,
-            values: 20
-        },
-        purple: {
-            x: 31,
-            values: 50
-        },
-        yellow: {
-            x: 15,
-            values: 200
-        }
+        1: { type: 'green', x: 0, value: 1 },
+        2: { type: 'blue', x: 7, value: 5 },
+        3: { type: 'red', x: 24, values: 20 },
+        4: { type: 'purple', x: 31, values: 50 },
+        5: { type: 'yellow', x: 15, values: 200 }
     }
 }
 rupeesData.image.src = "/images/sprites/rupees.png";
@@ -230,9 +216,11 @@ function render() {
 
     if (player.alive) {
         animateCharacter();
+        renderRupees();
         renderBlocks();
         requestAnimationFrame(movePlayer);
     } else if(gameover) {
+        renderRupees(false);
         renderBlocks(false);
         ctx.font = "50px Impact";
         ctx.fillStyle = "white";
@@ -240,16 +228,23 @@ function render() {
         ctx.fillText('Game Over!', width/2, height/2);
         renderCharacterDeath();
         requestAnimationFrame(animateDeathSequence);
+        gameLength = 0;
     } else if(continueCountdown > 0) {
         checkShouldRemoveBlock();
+        renderRupees(false);
         renderBlocks(false);
         renderCountDown();
         animateCharacter();
+        gameLength = 0;
     } else {
         renderCharacterDeath();
+        renderRupees(false);
         renderBlocks(false);
         requestAnimationFrame(animateDeathSequence);
+        gameLength = 0;
     }
+
+    gameLength++;
 
     renderScore();
     renderHealth();
@@ -340,28 +335,77 @@ function renderCountDown() {
 
 // rupee functions
 function renderRupees(animateRupees = true) {
+    var visibleRupees = 0;
 
-}
+    for (var i = 0; i < rupees.length; i++) {
+        var posX = animateRupees ? rupees[i].x-- : rupees[i].x;
+        drawRupee(rupees[i].type, posX, rupees[i].y);
 
-function generateRupeesArray() {
-    if (rupees.length == 0) {
-        var maxAmt = Math.floor(Math.random()*(5-0+1)+0);
-
-        for(var i = 0; i < maxAmt; i++) {
-            var startPos = rupees[i - 1] ? rupees[i - 1].x + 100 : 100;
-            var endPos = rupees[i - 1] ? rupees[i - 1].x + rupees[i -1].width + 50 : 150 + 48;
-            // rupees.push({
-            //     x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
-            //     y: Math.floor(Math.random()*((height - 100)-0+1)+0)
-            // });
+        if (posX + rupeesData.width <= 0) {
+            rupees.splice(i, 1);
+            addRupee();
+        } else {
+            visibleRupees++;
         }
+    }
+
+    var randomlyAddChances = [false, true];
+
+
+    if (randomlyAddChances[Math.floor(Math.random() * randomlyAddChances.length)] && visibleRupees < 5) {
+        addRupee();
     }
 }
 
-function drawRupee(type, posX, posY) {
+function getAvailableRupeeKeys() {
+    if (gameLength > 5000) {
+        console.log('hit 5');
+        return 5;
+    }
+
+    if (gameLength > 3000) {
+        console.log('hit 4');
+        return 4;
+    }
+
+    if (gameLength > 1500) {
+        console.log('hit 3');
+        return 3;
+    }
+
+    if (gameLength > 500) {
+        console.log('hit 2');
+        return 2;
+    }
+
+    console.log('hit 1');
+
+    return 1;
+}
+
+function addRupee() {
+    var startPos = width;
+    var endPos = Math.floor(Math.random()*((width * 2)-width+1)+width);
+    var rupeeType = Math.floor(Math.random()*(getAvailableRupeeKeys()-1+1)+1);
+    rupees.push({
+        type: rupeeType,
+        x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
+        y: Math.floor(Math.random()*((height - 100)-0+1)+0)
+    });
+}
+
+function generateRupeesArray() {
+    var maxAmt = Math.floor(Math.random()*(5-1+1)+1);
+
+    for(var i = 0; i < maxAmt; i++) {
+        addRupee();
+    }
+}
+
+function drawRupee(typeKey, posX, posY) {
     ctx.drawImage(
         rupeesData.image,
-        rupeesData.types[type].x,
+        rupeesData.types[typeKey].x,
         0,
         rupeesData.width,
         rupeesData.height,
