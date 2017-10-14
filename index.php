@@ -154,6 +154,35 @@ function checkShouldRemoveBlock() {
     }
 }
 
+function checkRupeeCollision() {
+    for (var i = 0; i < rupees.length; i++) {
+        var x = hitRupeeX(rupees[i]);
+        var y = hitRupeeY(rupees[i]);
+        if ((x && y) || (player.x == rupees[i].x && player.y == rupees[i].y)) {
+            score += rupeesData.types[rupees[i].type].value;
+            rupees.splice(i,1);
+        }
+    }
+}
+
+function hitRupeeX(rupee) {
+    var x_plusWidthGreater = player.x + player.width >= rupee.x;
+    var x_minusWidthGreater = player.x - player.width >= rupee.x;
+    var x_plusWidthLess = player.x + player.width <= rupee.x + rupeesData.width;
+    var x_minusWidthLess = player.x - player.width <= rupee.x + rupeesData.width;
+
+    return (x_plusWidthGreater || x_minusWidthGreater) && (x_plusWidthLess || x_minusWidthLess);
+}
+
+function hitRupeeY(rupee) {
+    var y_plusHeightGreater = player.y + player.height >= rupee.y;
+    var y_minusHeightGreater = player.y - player.height >= rupee.y;
+    var y_plusHeightLess = player.y + player.height <= rupee.y + rupeesData.height;
+    var y_minusHeightLess = player.y - player.height <= rupee.y + rupeesData.height;
+
+    return (y_plusHeightGreater || y_minusHeightGreater) && (y_plusHeightLess || y_minusHeightLess);
+}
+
 // moving functions
 function movePlayer(){
     //up and down
@@ -209,6 +238,7 @@ function movePlayer(){
         killPlayer();
     }
 
+    checkRupeeCollision();
     render();
 }
 
@@ -290,6 +320,7 @@ function renderHealth() {
 function renderScore() {
     ctx.font = "24px Impact";
     ctx.fillStyle = "white";
+    ctx.textAlign = "right";
     ctx.fillText(score, width - 20, 30);
 }
 
@@ -353,8 +384,6 @@ function renderRupees(animateRupees = true) {
     }
 
     var randomlyAddChances = [false, true];
-
-
     if (randomlyAddChances[Math.floor(Math.random() * randomlyAddChances.length)] && visibleRupees < 5) {
         addRupee();
     }
