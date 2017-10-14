@@ -59,9 +59,9 @@ var rupeesData            = {
     types: {
         1: { type: 'green', x: 0, value: 1 },
         2: { type: 'blue', x: 7, value: 5 },
-        3: { type: 'red', x: 24, values: 20 },
-        4: { type: 'purple', x: 31, values: 50 },
-        5: { type: 'yellow', x: 15, values: 200 }
+        3: { type: 'red', x: 24, value: 20 },
+        4: { type: 'purple', x: 31, value: 50 },
+        5: { type: 'yellow', x: 15, value: 200 }
     }
 }
 rupeesData.image.src = "/images/sprites/rupees.png";
