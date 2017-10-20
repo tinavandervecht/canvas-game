@@ -118,7 +118,7 @@ ctx.textAlign = "center";
 ctx.fillText("Oh Shit", width/2, height/2);
 
 ctx.font = "20px Arial";
-ctx.fillText("Press Enter To Start", width/2, height/2 + 50);
+ctx.fillText("Press Space To Start", width/2, height/2 + 50);
 
 generateUninteractablesArray();
 generateRupeesArray();
@@ -139,7 +139,7 @@ document.body.addEventListener("keyup", function(e) {
 // Functions
 // should code _ functions
 function checkShouldStartGame() {
-    if (keys[13]) {
+    if (keys[32]) {
         gameStarted = true;
         render();
     }
