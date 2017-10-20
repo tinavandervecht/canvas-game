@@ -232,18 +232,50 @@ function hitRupeeY(rupee) {
     return (y_plusHeightGreater || y_minusHeightGreater) && (y_plusHeightLess || y_minusHeightLess);
 }
 
+function collidesWithBlock(sidesToCheck) {
+    for (var i = 0; i < uninteractables.length; i++) {
+        if (uninteractables[i].type === 'block') {
+            if (sidesToCheck === 'horizontal') {
+                var coversY = (player.y >= uninteractables[i].y - (player.height - 2)) && (player.y <= uninteractables[i].y + uninteractables[i].height);
+                var coversX = (player.x >= uninteractables[i].x - (player.width - 2)) && (player.x <= uninteractables[i].x + uninteractables[i].width);
+
+                if (coversX && coversY) {
+                    return true;
+                }
+            }
+
+            if (sidesToCheck === 'vertical') {
+                var coversY = (player.y >= uninteractables[i].y - (player.height - 2)) && (player.y <= uninteractables[i].y + uninteractables[i].height);
+                var coversX = (player.x >= uninteractables[i].x - (player.width - 2)) && (player.x <= uninteractables[i].x + uninteractables[i].width);
+
+                if (coversX && coversY) {
+                    return true;
+                }
+            }
+        }
+    }
+}
+
 // moving functions
 function movePlayer(){
     //up and down
     if (keys[38]) {
         // up arrow
-        player.velY = 1;
-        player.y -= player.velY;
+        if (collidesWithBlock('vertical')) {
+            player.y += player.velY;
+        } else {
+            player.velY = 1;
+            player.y -= player.velY;
+        }
     } else {
         if (player.velY < player.speed) {
             player.velY += gravity;
         }
-        player.y += player.velY;
+        if (collidesWithBlock('vertical')) {
+            player.y -= player.velY;
+        } else {
+            player.y += player.velY;
+        }
     }
 
     // stops player from going past top edge
@@ -262,14 +294,22 @@ function movePlayer(){
         // right arrow
         player.facing = 'right';
         if (player.velX < player.speed) {
-            player.velX++;
+            if (collidesWithBlock('horizontal')) {
+                player.velX--;
+            } else {
+                player.velX++;
+            }
          }
     }
     if (keys[37]) {
         // left arrow
         player.facing = 'left';
         if (player.velX > -player.speed) {
-            player.velX--;
+            if (collidesWithBlock('horizontal')) {
+                player.velX++;
+            } else {
+                player.velX--;
+            }
         }
     }
 
@@ -287,8 +327,8 @@ function movePlayer(){
         killPlayer();
     }
 
-    checkUninteractableCollision();
     collidesWithRupee();
+    collidesWithCucco();
 
     render();
 }
