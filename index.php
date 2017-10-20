@@ -30,7 +30,7 @@ var deathPosition         = 0;
 var bounce                = true;
 var continueCountdown     = 0;
 var gameover              = false;
-var blocks                = [];
+var uninteractables       = [];
 var rupees                = [];
 var score                 = 0;
 var gameLength            = 0;
@@ -119,7 +119,7 @@ ctx.fillText("Oh Shit", width/2, height/2);
 ctx.font = "20px Arial";
 ctx.fillText("Press Enter To Start", width/2, height/2 + 50);
 
-generateBlocksArray();
+generateUninteractablesArray();
 generateRupeesArray();
 
 // Event Listeners
@@ -144,12 +144,23 @@ function checkShouldStartGame() {
     }
 }
 
-function checkShouldRemoveBlock() {
-    for (var i = 0; i < blocks.length; i++) {
-        var coversX = (player.x > blocks[i].x) && (player.x < blocks[i].x + blocks[i].width);
-        var coversY = (player.y > blocks[i].y) && (player.y < blocks[i].y + blocks[i].height);
+function checkShouldRemoveUninteractable() {
+    for (var i = 0; i < uninteractables.length; i++) {
+        var coversX = (player.x > uninteractables[i].x) && (player.x < uninteractables[i].x + uninteractables[i].width);
+        var coversY = (player.y > uninteractables[i].y) && (player.y < uninteractables[i].y + uninteractables[i].height);
         if (coversX && coversY) {
-            blocks.splice(i, 1);
+            uninteractables.splice(i, 1);
+        }
+    }
+}
+
+function checkUninteractableCollision() {
+    for (var i = 0; i < uninteractables.length; i++) {
+        var coversX = (player.x >= uninteractables[i].x - (player.width - 2)) && (player.x <= uninteractables[i].x + uninteractables[i].width);
+        var coversY = (player.y >= uninteractables[i].y - (player.width - 2)) && (player.y <= uninteractables[i].y + uninteractables[i].height);
+
+        if (coversX && coversY && uninteractables[i].type === 'cucco') {
+            killPlayer();
         }
     }
 }
@@ -239,6 +250,8 @@ function movePlayer(){
     }
 
     checkRupeeCollision();
+    checkUninteractableCollision();
+
     render();
 }
 
@@ -250,11 +263,11 @@ function render() {
     if (player.alive) {
         animateCharacter();
         renderRupees();
-        renderBlocks();
+        renderUninteractables();
         requestAnimationFrame(movePlayer);
     } else if(gameover) {
         renderRupees(false);
-        renderBlocks(false);
+        renderUninteractables(false);
         ctx.font = "50px Impact";
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
@@ -263,16 +276,16 @@ function render() {
         requestAnimationFrame(animateDeathSequence);
         gameLength = 0;
     } else if(continueCountdown > 0) {
-        checkShouldRemoveBlock();
+        checkShouldRemoveUninteractable();
         renderRupees(false);
-        renderBlocks(false);
+        renderUninteractables(false);
         renderCountDown();
         animateCharacter();
         gameLength = 0;
     } else {
         renderCharacterDeath();
         renderRupees(false);
-        renderBlocks(false);
+        renderUninteractables(false);
         requestAnimationFrame(animateDeathSequence);
         gameLength = 0;
     }
@@ -506,48 +519,65 @@ function zombifyPlayer() {
 }
 
 // block functions
-function generateBlocksArray() {
+function generateUninteractablesArray() {
     for (var i = 0; i < 20; i++) {
-        var startPos = blocks[i - 1] ? blocks[i - 1].x + 100 : 100;
-        var endPos = blocks[i - 1] ? blocks[i - 1].x + blocks[i -1].width + 50 : 150 + 48;
-        pushBlock(startPos, endPos);
+        var uninteractableType = Math.random() >= 0.5
+            ? 'cucco'
+            : 'block';
+        var hasPreviousUninteractable = uninteractables[i - 1];
+        var startPos = hasPreviousUninteractable ? uninteractables[i - 1].x + 100 : 100;
+        var endPos = hasPreviousUninteractable ? uninteractables[i - 1].x + uninteractables[i -1].width + 100 : 200;
+        pushUninteractable(startPos, endPos, uninteractableType);
     }
 }
 
-function renderBlocks(animateBlocks = true) {
-    for (var i = 0; i < blocks.length; i++) {
-        var posX = animateBlocks ? blocks[i].x-- : blocks[i].x;
+function renderUninteractables(animateUninteractables = true) {
+    for (var i = 0; i < uninteractables.length; i++) {
+        var posX = animateUninteractables ? uninteractables[i].x-- : uninteractables[i].x;
         ctx.drawImage(
-            blocks[i].image,
+            uninteractables[i].image,
             0,
             0,
-            blocks[i].width,
-            blocks[i].height,
+            uninteractables[i].width,
+            uninteractables[i].height,
             posX,
-            blocks[i].y,
-            blocks[i].width,
-            blocks[i].height
+            uninteractables[i].y,
+            uninteractables[i].width,
+            uninteractables[i].height
         );
 
-        if (posX + blocks[i].width <= 0) {
-            blocks.splice(i, 1);
-            var startPos = blocks[blocks.length - 1].x + 100;
-            var endPos = blocks[blocks.length - 1].x + blocks[blocks.length - 1].width + 50;
-            pushBlock(startPos, endPos);
+        if (posX + uninteractables[i].width <= 0) {
+            uninteractables.splice(i, 1);
+            var startPos = uninteractables[uninteractables.length - 1].x + 100;
+            var endPos = uninteractables[uninteractables.length - 1].x + uninteractables[uninteractables.length - 1].width + 100;
+            pushUninteractable(startPos, endPos);
         }
     }
 }
 
-function pushBlock(startPos, endPos) {
-    blocks.push({
-        image: new Image(),
+function pushUninteractable(startPos, endPos, uninteractableType) {
+    var data = {
         width: 64,
         height: 48,
+        src: '/images/sprites/block.png'
+    };
+
+    if (uninteractableType == 'cucco') {
+        data['width'] = 28;
+        data['height'] = 32;
+        data['src'] = '/images/sprites/cucco.png';
+    }
+
+    uninteractables.push({
+        image: new Image(),
+        width: data['width'],
+        height: data['height'],
+        type: uninteractableType,
         x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
-        y: Math.floor(Math.random()*((height - 48)-0+1)+0)
+        y: Math.floor(Math.random()*((height - data['height'])-0+1)+0)
     });
 
-    blocks[blocks.length - 1].image.src = "/images/block.png";
+    uninteractables[uninteractables.length - 1].image.src = data['src'];
 }
 
 
