@@ -55,6 +55,7 @@ var uninteractableType    = 'block';
 var rupees                = [];
 var score                 = 0;
 var gameLength            = 0;
+var gamePaused            = false;
 canvas.width              = width;
 canvas.height             = height;
 
@@ -148,6 +149,8 @@ document.body.addEventListener("keydown", function(e) {
     keys[e.keyCode] = true;
     if (!gameStarted) {
         checkShouldStartGame();
+    } else if(keys[32]) {
+        checkShouldPauseGame();
     }
 });
 
@@ -174,6 +177,18 @@ function checkShouldRemoveUninteractable() {
             uninteractables.splice(i, 1);
         }
     }
+}
+
+function checkShouldPauseGame() {
+    if (gamePaused) {
+        gamePaused = false;
+        render();
+    } else {
+        gamePaused = true;
+    }
+}
+function startBackgroundAudio() {
+    document.getElementById('backgroundAudio').play();
 }
 
 function collidesWithCucco() {
@@ -283,7 +298,14 @@ function render() {
     ctx.clearRect(0,0,width,height);
     renderBackground();
 
-    if (player.alive) {
+    if (gamePaused) {
+        renderRupees(false);
+        renderUninteractables(false);
+        ctx.font = "50px Impact";
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.fillText('Paused', width/2, height/2);
+    } else if (player.alive) {
         animateCharacter();
         renderRupees();
         renderUninteractables();
