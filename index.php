@@ -31,6 +31,7 @@ var bounce                = true;
 var continueCountdown     = 0;
 var gameover              = false;
 var uninteractables       = [];
+var uninteractableType    = 'block';
 var rupees                = [];
 var score                 = 0;
 var gameLength            = 0;
@@ -154,7 +155,7 @@ function checkShouldRemoveUninteractable() {
     }
 }
 
-function checkUninteractableCollision() {
+function collidesWithCucco() {
     for (var i = 0; i < uninteractables.length; i++) {
         var coversX = (player.x >= uninteractables[i].x - (player.width - 2)) && (player.x <= uninteractables[i].x + uninteractables[i].width);
         var coversY = (player.y >= uninteractables[i].y - (player.width - 2)) && (player.y <= uninteractables[i].y + uninteractables[i].height);
@@ -165,7 +166,7 @@ function checkUninteractableCollision() {
     }
 }
 
-function checkRupeeCollision() {
+function collidesWithRupee() {
     for (var i = 0; i < rupees.length; i++) {
         var x = hitRupeeX(rupees[i]);
         var y = hitRupeeY(rupees[i]);
@@ -214,7 +215,7 @@ function movePlayer(){
     }
 
     // this stops player from going past bottom edge
-    if(player.y >= height-player.height){
+    if(player.y >= height - player.height){
         player.y = height - player.height;
         killPlayer();
     }
@@ -249,8 +250,8 @@ function movePlayer(){
         killPlayer();
     }
 
-    checkRupeeCollision();
     checkUninteractableCollision();
+    collidesWithRupee();
 
     render();
 }
@@ -422,6 +423,18 @@ function getAvailableRupeeKeys() {
     return 1;
 }
 
+function getCuccoLikelihood() {
+    if (gameLength > 5000) {
+        return 75;
+    }
+
+    if (gameLength > 1500) {
+        return 50;
+    }
+
+    return 25;
+}
+
 function addRupee() {
     var startPos = width;
     var endPos = Math.floor(Math.random()*((width * 2)-width+1)+width);
@@ -521,63 +534,119 @@ function zombifyPlayer() {
 // block functions
 function generateUninteractablesArray() {
     for (var i = 0; i < 20; i++) {
-        var uninteractableType = Math.random() >= 0.5
-            ? 'cucco'
-            : 'block';
+        setUninteractableType();
         var hasPreviousUninteractable = uninteractables[i - 1];
-        var startPos = hasPreviousUninteractable ? uninteractables[i - 1].x + 100 : 100;
-        var endPos = hasPreviousUninteractable ? uninteractables[i - 1].x + uninteractables[i -1].width + 100 : 200;
-        pushUninteractable(startPos, endPos, uninteractableType);
+        var startPos = hasPreviousUninteractable ? uninteractables[i - 1].x + uninteractables[i - 1].width : 100;
+        var endPos = hasPreviousUninteractable ? uninteractables[i - 1].x + uninteractables[i - 1].width + 100 : 200;
+        pushUninteractable(startPos, endPos);
     }
 }
 
 function renderUninteractables(animateUninteractables = true) {
     for (var i = 0; i < uninteractables.length; i++) {
         var posX = animateUninteractables ? uninteractables[i].x-- : uninteractables[i].x;
-        ctx.drawImage(
-            uninteractables[i].image,
-            0,
-            0,
-            uninteractables[i].width,
-            uninteractables[i].height,
-            posX,
-            uninteractables[i].y,
-            uninteractables[i].width,
-            uninteractables[i].height
-        );
+
+        if (uninteractables[i].type === 'block') {
+            renderBlock(uninteractables[i], posX);
+        } else {
+            renderCucco(uninteractables[i], posX);
+        };
 
         if (posX + uninteractables[i].width <= 0) {
             uninteractables.splice(i, 1);
-            var startPos = uninteractables[uninteractables.length - 1].x + 100;
+            setUninteractableType();
+            var startPos = uninteractables[uninteractables.length - 1].x + uninteractables[uninteractables.length - 1].width;
             var endPos = uninteractables[uninteractables.length - 1].x + uninteractables[uninteractables.length - 1].width + 100;
             pushUninteractable(startPos, endPos);
         }
     }
 }
 
-function pushUninteractable(startPos, endPos, uninteractableType) {
-    var data = {
-        width: 64,
-        height: 48,
-        src: '/images/sprites/block.png'
-    };
+function renderBlock(block, posX) {
+    ctx.drawImage(
+        block.image,
+        0,
+        0,
+        block.width,
+        block.height,
+        posX,
+        block.y,
+        block.width,
+        block.height
+    );
+}
 
+function renderCucco(cucco, posX) {
+    ctx.drawImage(
+        cucco.image,
+        cucco.animations[cucco.currentFrame].sourceX,
+        cucco.animations[cucco.currentFrame].sourceY,
+        cucco.width,
+        cucco.height,
+        posX,
+        cucco.y,
+        cucco.width,
+        cucco.height
+    );
+
+    if (cucco.fpsCount > 12) {
+        if (cucco.currentFrame == cucco.totalFrames) {
+            cucco.currentFrame = 0;
+        }
+
+        cucco.currentFrame++;
+
+        cucco.fpsCount = 0;
+    } else {
+        cucco.fpsCount++;
+    }
+}
+
+function pushUninteractable(startPos, endPos) {
     if (uninteractableType == 'cucco') {
-        data['width'] = 28;
-        data['height'] = 32;
-        data['src'] = '/images/sprites/cucco.png';
+        uninteractables.push({
+            image: new Image(),
+            width: 30,
+            height: 32,
+            type: uninteractableType,
+            x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
+            y: Math.floor(Math.random()*((height - 32)-0+1)+0),
+            totalFrames: 2,
+            currentFrame: Math.floor(Math.random()*(2-1+1)+1),
+            fpsCount: 0,
+        });
+
+        uninteractables[uninteractables.length - 1].image.src = '/images/sprites/cucco.png';
+
+        uninteractables[uninteractables.length - 1].animations = {
+            1: {
+                sourceX: 0,
+                sourceY: 0
+            },
+            2: {
+                sourceX: uninteractables[uninteractables.length - 1].width,
+                sourceY: 0
+            }
+        }
+    } else {
+        uninteractables.push({
+            image: new Image(),
+            width: 64,
+            height: 48,
+            type: uninteractableType,
+            x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
+            y: Math.floor(Math.random()*((height - 48)-0+1)+0)
+        });
+
+        uninteractables[uninteractables.length - 1].image.src = '/images/sprites/block.png';
     }
 
-    uninteractables.push({
-        image: new Image(),
-        width: data['width'],
-        height: data['height'],
-        type: uninteractableType,
-        x: Math.floor(Math.random()*(endPos-startPos+1)+startPos),
-        y: Math.floor(Math.random()*((height - data['height'])-0+1)+0)
-    });
+}
 
-    uninteractables[uninteractables.length - 1].image.src = data['src'];
+function setUninteractableType() {
+    uninteractableType = Math.floor(Math.random()*(100-1+1)+1) < getCuccoLikelihood()
+        ? 'cucco'
+        : 'block';
 }
 
 
