@@ -7,6 +7,26 @@
 
     <canvas id="canvas" style="border:1px solid #000"></canvas>
 
+    <audio preload="auto" id="getRupeeAudio">
+      <source src="audio/rupees/get_rupee.mp3" type="audio/mpeg">
+      <source src="audio/rupees/get_rupee.ogg" type="audio/ogg">
+    </audio>
+
+    <audio preload="auto" id="swimmingAudio">
+      <source src="audio/link/swimming.mp3" type="audio/mpeg">
+      <source src="audio/link/swimming.ogg" type="audio/ogg">
+    </audio>
+
+    <audio preload="auto" id="hurtAudio">
+      <source src="audio/link/scream.mp3" type="audio/mpeg">
+      <source src="audio/link/scream.ogg" type="audio/ogg">
+    </audio>
+
+    <audio preload="auto" id="backgroundAudio" loop="loop">
+      <source src="audio/water_temple.mp3" type="audio/mpeg">
+      <source src="audio/water_temple.ogg" type="audio/ogg">
+    </audio>
+
 <script>
 // requestAnimationFrame and fallback
 (function() {
@@ -141,6 +161,7 @@ document.body.addEventListener("keyup", function(e) {
 function checkShouldStartGame() {
     if (keys[32]) {
         gameStarted = true;
+        startBackgroundAudio();
         render();
     }
 }
@@ -171,6 +192,7 @@ function collidesWithRupee() {
         var x = hitRupeeX(rupees[i]);
         var y = hitRupeeY(rupees[i]);
         if ((x && y) || (player.x == rupees[i].x && player.y == rupees[i].y)) {
+            document.getElementById('getRupeeAudio').play();
             score += rupeesData.types[rupees[i].type].value;
             rupees.splice(i,1);
         }
@@ -487,6 +509,8 @@ function animateCharacter() {
             player.currentFrame = 0;
         }
 
+        document.getElementById('swimmingAudio').play();
+
         player.currentFrame++;
 
         player.fpsCount = 0;
@@ -514,6 +538,9 @@ function animateDeathSequence() {
 
 // player life functions
 function killPlayer() {
+    document.getElementById('backgroundAudio').pause();
+    document.getElementById('backgroundAudio').currentTime = 0;
+    document.getElementById('hurtAudio').play();
     player.facing = 'right';
     backgroundImage.freeze = true;
     player.alive = false;
