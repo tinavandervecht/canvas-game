@@ -72,6 +72,14 @@
     </audio>
 
 <script>
+    var getHighScores = <?php echo file_get_contents('./highscores.json'); ?>;
+    var highScores = getHighScores.slice(0);
+    highScores.sort(function(a,b) {
+        return a.score - b.score;
+    });
+    highScores.reverse();
+</script>
+<script>
 // requestAnimationFrame and fallback
 (function() {
     var requestAnimationFrame = window.requestAnimationFrame
@@ -109,6 +117,12 @@ var playBtn               = {
     bottom: 0
 }
 var highScoreBtn          = {
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0
+}
+var closeHighScoresBtn    = {
     left: 0,
     right: 0,
     top: 0,
@@ -797,6 +811,26 @@ function renderCucco(cucco, posX) {
         cucco.fpsCount = 0;
     } else {
         cucco.fpsCount++;
+    }
+}
+
+function renderHighScoresList() {
+    ctx.clearRect(0,0,width,height);
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, width, height);
+    ctx.textAlign = 'right';
+    fadeIn('Return to Main Menu', width - 75, 30, 20, 'Return of Ganon', closeHighScoresBtn);
+    ctx.textAlign = 'center';
+    fadeIn('High Scores', width / 2, 75, 40, 'Triforce');
+
+    var xPos = 125;
+    for (var i = 0; i < 5; i++) {
+        var obj = highScores[i];
+        ctx.font = "40px Return of Ganon";
+        ctx.fillStyle = "white";
+        ctx.fillText(obj['username'], 250, xPos);
+        ctx.fillText(obj['score'], 500, xPos);
+        xPos = xPos + 50;
     }
 }
 
