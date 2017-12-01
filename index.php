@@ -539,7 +539,7 @@ function renderHealth() {
 }
 
 function renderScore() {
-    ctx.font = "24px Impact";
+    ctx.font = "20px Triforce";
     ctx.fillStyle = "white";
     ctx.textAlign = "right";
     ctx.fillText(score, width - 20, 30);
@@ -572,10 +572,10 @@ function renderCharacterDeath() {
 }
 
 function renderCountDown() {
-    ctx.font = "50px Impact";
-    ctx.fillStyle = "white";
+    ctx.font = "125px Return of Ganon";
+    ctx.fillStyle = "black";
     ctx.textAlign = "center";
-    ctx.fillText(continueCountdown, width/2, height/2);
+    ctx.fillText(continueCountdown, width/2, height/1.5);
 
     continueCountdown--;
 
