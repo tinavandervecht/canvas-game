@@ -2,6 +2,50 @@
 <html>
 <head>
     <title>My fancy game</title>
+
+    <style>
+        @font-face {
+            font-family: 'Triforce';
+            src: url('/fonts/Triforce.eot');
+            src: url('/fonts/Triforce.eot?#iefix') format('embedded-opentype'),
+                url('/fonts/Triforce.woff') format('woff'),
+                url('/fonts/Triforce.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Return of Ganon';
+            src: url('/fonts/ReturnOfGanonReg.eot');
+            src: url('/fonts/ReturnOfGanonReg.eot?#iefix') format('embedded-opentype'),
+                url('/fonts/ReturnOfGanonReg.woff') format('woff'),
+                url('/fonts/ReturnOfGanonReg.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        .game {
+            position:relative;
+            width:750px;
+        }
+        #highScoreForm {
+            position:absolute;
+            top: 50%;
+            width:100%;
+            text-align:center;
+        }
+
+        .hidden {
+            display:none;
+        }
+
+        input {
+            padding:5px;
+        }
+
+        input:focus {
+            outline:none;
+        }
+    </style>
 </head>
 <body>
 
@@ -58,6 +102,18 @@ var gameLength            = 0;
 var gamePaused            = false;
 canvas.width              = width;
 canvas.height             = height;
+var playBtn               = {
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0
+}
+var highScoreBtn          = {
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0
+}
 
 // Images
 var backgroundImage       = {
@@ -131,25 +187,14 @@ player.animations         = {
     }
 }
 
-// Start Screen
-ctx.fillRect(0, 0, width, height);
-ctx.font = "50px Impact";
-ctx.fillStyle = "white";
-ctx.textAlign = "center";
-ctx.fillText("Oh Shit", width/2, height/2);
-
-ctx.font = "20px Arial";
-ctx.fillText("Press Space To Start", width/2, height/2 + 50);
-
+loadGame(true);
 generateUninteractablesArray();
 generateRupeesArray();
 
 // Event Listeners
 document.body.addEventListener("keydown", function(e) {
     keys[e.keyCode] = true;
-    if (!gameStarted) {
-        checkShouldStartGame();
-    } else if(keys[32]) {
+    if(keys[32] && gameStarted) {
         checkShouldPauseGame();
     }
 });
@@ -158,17 +203,50 @@ document.body.addEventListener("keyup", function(e) {
     keys[e.keyCode] = false;
 });
 
+canvas.addEventListener("mousemove", function(e) {
+    var mousePos = getMousePos(canvas, e);
+    e.target.style.cursor = 'default';
 
-// Functions
-// should code _ functions
-function checkShouldStartGame() {
-    if (keys[32]) {
+    if ((mousePos.x >= playBtn.left && mousePos.x <= playBtn.right)
+        && (mousePos.y >= playBtn.top && mousePos.y <= playBtn.bottom)) {
+            e.target.style.cursor = 'pointer';
+    }
+
+    if ((mousePos.x >= highScoreBtn.left && mousePos.x <= highScoreBtn.right)
+        && (mousePos.y >= highScoreBtn.top && mousePos.y <= highScoreBtn.bottom)) {
+            e.target.style.cursor = 'pointer';
+    }
+
+    if ((mousePos.x >= closeHighScoresBtn.left && mousePos.x <= closeHighScoresBtn.right)
+        && (mousePos.y >= closeHighScoresBtn.top && mousePos.y <= closeHighScoresBtn.bottom)) {
+            e.target.style.cursor = 'pointer';
+    }
+});
+
+canvas.addEventListener("click", function(e) {
+    var mousePos = getMousePos(canvas, e);
+
+    if ((mousePos.x >= playBtn.left && mousePos.x <= playBtn.right)
+        && (mousePos.y >= playBtn.top && mousePos.y <= playBtn.bottom)) {
         gameStarted = true;
         startBackgroundAudio();
         render();
     }
-}
 
+    if ((mousePos.x >= highScoreBtn.left && mousePos.x <= highScoreBtn.right)
+        && (mousePos.y >= highScoreBtn.top && mousePos.y <= highScoreBtn.bottom)) {
+        renderHighScoresList();
+    }
+
+    if ((mousePos.x >= closeHighScoresBtn.left && mousePos.x <= closeHighScoresBtn.right)
+        && (mousePos.y >= closeHighScoresBtn.top && mousePos.y <= closeHighScoresBtn.bottom)) {
+        closeHighScoresBtn = {};
+        loadGame();
+    }
+});
+
+// Functions
+// should code _ functions
 function checkShouldRemoveUninteractable() {
     for (var i = 0; i < uninteractables.length; i++) {
         var coversX = (player.x > uninteractables[i].x) && (player.x < uninteractables[i].x + uninteractables[i].width);
@@ -187,6 +265,7 @@ function checkShouldPauseGame() {
         gamePaused = true;
     }
 }
+
 function startBackgroundAudio() {
     document.getElementById('backgroundAudio').play();
 }
@@ -345,6 +424,27 @@ function movePlayer(){
     render();
 }
 
+function loadGame(animateIn) {
+    ctx.clearRect(0,0,width,height);
+    var startBg = new Image();
+    startBg.src = '/images/background.gif';
+    startBg.onload = function() {
+        ctx.drawImage(startBg, 0, 0, width, height);
+    };
+    ctx.textAlign = 'center';
+
+    fadeIn('The Legend of Tina', width / 2, 100, 68, 'Triforce');
+    fadeIn('Play', width / 2, 200, 20, 'Return of Ganon', playBtn);
+    fadeIn('High Scores', width / 2, 230, 20, 'Return of Ganon', highScoreBtn);
+    fadeIn(
+        'All icons and verbiage that remind you of Zelda belongs to Nintendo. Pls don\'t sue',
+        width / 2,
+        height - 12,
+        12,
+        'Arial'
+    );
+}
+
 // render functions
 function render() {
     ctx.clearRect(0,0,width,height);
@@ -365,10 +465,7 @@ function render() {
     } else if(gameover) {
         renderRupees(false);
         renderUninteractables(false);
-        ctx.font = "50px Impact";
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.fillText('Game Over!', width/2, height/2);
+        renderGameOverScreen();
         renderCharacterDeath();
         requestAnimationFrame(animateDeathSequence);
         gameLength = 0;
@@ -750,6 +847,35 @@ function setUninteractableType() {
         : 'block';
 }
 
+function fadeIn(text, x, y, fontSize, font, textVar = null) {
+    var alpha = 0.0,
+        interval = setInterval(function () {
+            ctx.fillStyle = "rgba(255, 255, 255, " + alpha + ")";
+            ctx.font = fontSize + 'px ' + font;
+            if (textVar) {
+                var width = ctx.measureText(text).width;
+                var height = fontSize;
+                textVar.top = y - height;
+                textVar.bottom = y;
+                textVar.left = x - width;
+                textVar.right = x + width;
+            }
+            ctx.fillText(text, x, y);
+            if (alpha < .4) {
+                alpha = alpha + 0.05;
+            } else {
+                clearInterval(interval);
+            }
+        }, 50);
+}
+
+function getMousePos(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+            x: evt.clientX - rect.left,
+            y: evt.clientY - rect.top
+        };
+    }
 
 </script>
 </body>
