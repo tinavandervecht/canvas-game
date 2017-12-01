@@ -232,25 +232,44 @@ function hitRupeeY(rupee) {
     return (y_plusHeightGreater || y_minusHeightGreater) && (y_plusHeightLess || y_minusHeightLess);
 }
 
-function collidesWithBlock(sidesToCheck) {
+function collidesWithBlock(sideToCheck) {
     for (var i = 0; i < uninteractables.length; i++) {
         if (uninteractables[i].type === 'block') {
-            if (sidesToCheck === 'horizontal') {
-                var coversY = (player.y >= uninteractables[i].y - (player.height - 2)) && (player.y <= uninteractables[i].y + uninteractables[i].height);
-                var coversX = (player.x >= uninteractables[i].x - (player.width - 2)) && (player.x <= uninteractables[i].x + uninteractables[i].width);
+            var coversY = false;
+            var coversX = false;
 
-                if (coversX && coversY) {
-                    return true;
+            if (sideToCheck === 'left' || sideToCheck === 'right') {
+                coversY = player.y + player.height >= uninteractables[i].y
+                    && player.y <= uninteractables[i].y + uninteractables[i].height;
+
+                if (sideToCheck === 'left') {
+                    coversX = player.x - player.width >= uninteractables[i].x - (uninteractables[i].width / 1.5)
+                        && player.x + player.width <= uninteractables[i].x + (uninteractables[i].width / 2);
+                }
+
+                if (sideToCheck === 'right') {
+                    coversX = player.x >= uninteractables[i].x + uninteractables[i].width
+                         && player.x <= uninteractables[i].x + uninteractables[i].width + 5;
                 }
             }
 
-            if (sidesToCheck === 'vertical') {
-                var coversY = (player.y >= uninteractables[i].y - (player.height - 2)) && (player.y <= uninteractables[i].y + uninteractables[i].height);
-                var coversX = (player.x >= uninteractables[i].x - (player.width - 2)) && (player.x <= uninteractables[i].x + uninteractables[i].width);
+            if (sideToCheck === 'top' || sideToCheck === 'bottom') {
+                coversX = (player.x + (player.width / 2) >= uninteractables[i].x)
+                    && (player.x <= uninteractables[i].x + uninteractables[i].width);
 
-                if (coversX && coversY) {
-                    return true;
+                if (sideToCheck === 'top') {
+                    coversY = player.y - (player.height / 2) >= uninteractables[i].y - (uninteractables[i].height / 2)
+                        && player.y - (player.height / 2) <= uninteractables[i].y - (uninteractables[i].height / 2) + 10;
                 }
+
+                if (sideToCheck === 'bottom') {
+                    coversY = player.y - (player.height + (player.height / 1.5)) <= uninteractables[i].y + (uninteractables[i].height / 2)
+                        && player.y - (player.height + (player.height / 1.5)) >= uninteractables[i].y;
+                }
+            }
+
+            if (coversX && coversY) {
+                return true;
             }
         }
     }
@@ -261,19 +280,16 @@ function movePlayer(){
     //up and down
     if (keys[38]) {
         // up arrow
-        if (collidesWithBlock('vertical')) {
-            player.y += player.velY;
-        } else {
+        if (!collidesWithBlock('bottom')) {
             player.velY = 1;
             player.y -= player.velY;
         }
     } else {
+        // down arrow
         if (player.velY < player.speed) {
             player.velY += gravity;
         }
-        if (collidesWithBlock('vertical')) {
-            player.y -= player.velY;
-        } else {
+        if (!collidesWithBlock('top')) {
             player.y += player.velY;
         }
     }
@@ -294,9 +310,7 @@ function movePlayer(){
         // right arrow
         player.facing = 'right';
         if (player.velX < player.speed) {
-            if (collidesWithBlock('horizontal')) {
-                player.velX--;
-            } else {
+            if (!collidesWithBlock('left')) {
                 player.velX++;
             }
          }
@@ -305,9 +319,7 @@ function movePlayer(){
         // left arrow
         player.facing = 'left';
         if (player.velX > -player.speed) {
-            if (collidesWithBlock('horizontal')) {
-                player.velX++;
-            } else {
+            if (!collidesWithBlock('right')) {
                 player.velX--;
             }
         }
