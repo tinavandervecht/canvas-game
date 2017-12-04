@@ -122,7 +122,7 @@ var highScoreBtn          = {
     top: 0,
     bottom: 0
 }
-var closeHighScoresBtn    = {
+var returnMainMenuBtn    = {
     left: 0,
     right: 0,
     top: 0,
@@ -231,8 +231,8 @@ canvas.addEventListener("mousemove", function(e) {
             e.target.style.cursor = 'pointer';
     }
 
-    if ((mousePos.x >= closeHighScoresBtn.left && mousePos.x <= closeHighScoresBtn.right)
-        && (mousePos.y >= closeHighScoresBtn.top && mousePos.y <= closeHighScoresBtn.bottom)) {
+    if ((mousePos.x >= returnMainMenuBtn.left && mousePos.x <= returnMainMenuBtn.right)
+        && (mousePos.y >= returnMainMenuBtn.top && mousePos.y <= returnMainMenuBtn.bottom)) {
             e.target.style.cursor = 'pointer';
     }
 });
@@ -242,6 +242,9 @@ canvas.addEventListener("click", function(e) {
 
     if ((mousePos.x >= playBtn.left && mousePos.x <= playBtn.right)
         && (mousePos.y >= playBtn.top && mousePos.y <= playBtn.bottom)) {
+        returnMainMenuBtn = {};
+        playBtn = {};
+        highScoreBtn = {};
         gameStarted = true;
         startBackgroundAudio();
         render();
@@ -249,12 +252,19 @@ canvas.addEventListener("click", function(e) {
 
     if ((mousePos.x >= highScoreBtn.left && mousePos.x <= highScoreBtn.right)
         && (mousePos.y >= highScoreBtn.top && mousePos.y <= highScoreBtn.bottom)) {
+        returnMainMenuBtn = {};
+        playBtn = {};
+        highScoreBtn = {};
         renderHighScoresList();
     }
 
-    if ((mousePos.x >= closeHighScoresBtn.left && mousePos.x <= closeHighScoresBtn.right)
-        && (mousePos.y >= closeHighScoresBtn.top && mousePos.y <= closeHighScoresBtn.bottom)) {
-        closeHighScoresBtn = {};
+    if ((mousePos.x >= returnMainMenuBtn.left && mousePos.x <= returnMainMenuBtn.right)
+        && (mousePos.y >= returnMainMenuBtn.top && mousePos.y <= returnMainMenuBtn.bottom)) {
+        returnMainMenuBtn = {};
+        playBtn = {};
+        highScoreBtn = {};
+        document.getElementById('highScoreForm').classList.add("hidden");
+        document.getElementById('hurtAudio').pause();
         loadGame();
     }
 });
@@ -438,7 +448,7 @@ function movePlayer(){
     render();
 }
 
-function loadGame(animateIn) {
+function loadGame() {
     ctx.clearRect(0,0,width,height);
     var startBg = new Image();
     startBg.src = '/images/background.gif';
@@ -448,6 +458,7 @@ function loadGame(animateIn) {
     ctx.textAlign = 'center';
 
     fadeIn('The Legend of Tina', width / 2, 100, 68, 'Triforce');
+    fadeIn('Best with sound!', width / 2 + 230, 115, 15, 'Return of Ganon');
     fadeIn('Play', width / 2, 200, 20, 'Return of Ganon', playBtn);
     fadeIn('High Scores', width / 2, 230, 20, 'Return of Ganon', highScoreBtn);
     fadeIn(
@@ -467,8 +478,8 @@ function render() {
     if (gamePaused) {
         renderRupees(false);
         renderUninteractables(false);
-        ctx.font = "50px Impact";
-        ctx.fillStyle = "white";
+        ctx.font = "68px Triforce";
+        ctx.fillStyle = "black";
         ctx.textAlign = "center";
         ctx.fillText('Paused', width/2, height/2);
     } else if (player.alive) {
@@ -479,9 +490,8 @@ function render() {
     } else if(gameover) {
         renderRupees(false);
         renderUninteractables(false);
-        renderGameOverScreen();
         renderCharacterDeath();
-        requestAnimationFrame(animateDeathSequence);
+        renderGameOverScreen();
         gameLength = 0;
     } else if(continueCountdown > 0) {
         checkShouldRemoveUninteractable();
@@ -586,6 +596,35 @@ function renderCountDown() {
     window.setTimeout(function() {
         render();
     },1000);
+}
+
+function renderGameOverScreen() {
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.font = '50px Triforce';
+    ctx.fillText('Game Over', width / 2, 100);
+
+    var pointText = 'Well, you tried - You got ' + score + '. Maybe try again?';
+
+    if (score > 5) {
+        pointText = 'Good Job! You managed to get ' + score + '!';
+    }
+
+    if (score > 500) {
+        pointText = 'Holy moly! You managed to get ' + score + '!  You\'re definitely one of a kind!';
+    }
+
+    ctx.font = '20px Return of Ganon';
+    ctx.fillText(pointText, width / 2, 150);
+
+    ctx.textAlign = "right";
+    ctx.font = '20px Return of Ganon';
+    ctx.fillText('Return to Main Menu', width - 30, 30);
+    buildTextObj(returnMainMenuBtn,'Return to Main Menu',width - 30, 30, 20);
+
+    document.getElementById('highScoreForm').classList.remove("hidden");
 }
 
 // rupee functions
@@ -819,17 +858,17 @@ function renderHighScoresList() {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, width, height);
     ctx.textAlign = 'right';
-    fadeIn('Return to Main Menu', width - 75, 30, 20, 'Return of Ganon', closeHighScoresBtn);
+    fadeIn('Return to Main Menu', width - 75, 30, 20, 'Return of Ganon', returnMainMenuBtn);
     ctx.textAlign = 'center';
     fadeIn('High Scores', width / 2, 75, 40, 'Triforce');
 
     var xPos = 125;
     for (var i = 0; i < 5; i++) {
         var obj = highScores[i];
-        ctx.font = "40px Return of Ganon";
-        ctx.fillStyle = "white";
-        ctx.fillText(obj['username'], 250, xPos);
-        ctx.fillText(obj['score'], 500, xPos);
+        fadeIn('[' + (i + 1) + ']', 200, xPos - 5, 20, 'Return of Ganon');
+        fadeIn(obj['username'], 250, xPos, 40, 'Return of Ganon');
+        fadeIn(obj['score'], 500, xPos, 40, 'Return of Ganon');
+
         xPos = xPos + 50;
     }
 }
@@ -884,15 +923,10 @@ function setUninteractableType() {
 function fadeIn(text, x, y, fontSize, font, textVar = null) {
     var alpha = 0.0,
         interval = setInterval(function () {
-            ctx.fillStyle = "rgba(255, 255, 255, " + alpha + ")";
             ctx.font = fontSize + 'px ' + font;
+            ctx.fillStyle = "rgba(255, 255, 255, " + alpha + ")";
             if (textVar) {
-                var width = ctx.measureText(text).width;
-                var height = fontSize;
-                textVar.top = y - height;
-                textVar.bottom = y;
-                textVar.left = x - width;
-                textVar.right = x + width;
+                buildTextObj(textVar,text,x,y,fontSize);
             }
             ctx.fillText(text, x, y);
             if (alpha < .4) {
@@ -901,6 +935,14 @@ function fadeIn(text, x, y, fontSize, font, textVar = null) {
                 clearInterval(interval);
             }
         }, 50);
+}
+
+function buildTextObj(textObj, text, x, y, height) {
+    var width = ctx.measureText(text).width;
+    textObj.top = y - height;
+    textObj.bottom = y;
+    textObj.left = x - width;
+    textObj.right = x + width;
 }
 
 function getMousePos(canvas, evt) {
