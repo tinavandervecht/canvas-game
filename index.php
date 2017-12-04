@@ -267,9 +267,7 @@ canvas.addEventListener("click", function(e) {
         returnMainMenuBtn = {};
         playBtn = {};
         highScoreBtn = {};
-        document.getElementById('highScoreForm').classList.add("hidden");
-        document.getElementById('hurtAudio').pause();
-        document.getElementById('hurtAudio').currentTime = 0;
+        resetGame();
         loadGame();
     }
 });
@@ -453,6 +451,21 @@ function movePlayer(){
     collidesWithCucco();
 
     render();
+}
+
+function resetGame() {
+    score = 0;
+    document.getElementById('highScoreForm').classList.add("hidden");
+    document.getElementById('hurtAudio').pause();
+    document.getElementById('hurtAudio').currentTime = 0;
+    zombifyPlayer();
+    player.x = 50;
+    player.y = height / 2;
+    player.facing = 'right';
+    player.health = 3;
+    gameLength = 0;
+    gameover = false;
+    gameStarted = false;
 }
 
 function loadGame() {
