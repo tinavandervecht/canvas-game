@@ -50,6 +50,10 @@
 <body>
 
     <canvas id="canvas" style="border:1px solid #000"></canvas>
+    <audio preload="auto" id="titleThemeAudio">
+      <source src="audio/title-theme.mp3" type="audio/mpeg">
+      <source src="audio/title-theme.ogg" type="audio/ogg">
+    </audio>
 
     <audio preload="auto" id="getRupeeAudio">
       <source src="audio/rupees/get_rupee.mp3" type="audio/mpeg">
@@ -201,7 +205,7 @@ player.animations         = {
     }
 }
 
-loadGame(true);
+loadGame();
 generateUninteractablesArray();
 generateRupeesArray();
 
@@ -265,6 +269,7 @@ canvas.addEventListener("click", function(e) {
         highScoreBtn = {};
         document.getElementById('highScoreForm').classList.add("hidden");
         document.getElementById('hurtAudio').pause();
+        document.getElementById('hurtAudio').currentTime = 0;
         loadGame();
     }
 });
@@ -291,6 +296,8 @@ function checkShouldPauseGame() {
 }
 
 function startBackgroundAudio() {
+    document.getElementById('titleThemeAudio').pause();
+    document.getElementById('titleThemeAudio').currentTime = 0;
     document.getElementById('backgroundAudio').play();
 }
 
@@ -449,6 +456,7 @@ function movePlayer(){
 }
 
 function loadGame() {
+    document.getElementById('titleThemeAudio').play();
     ctx.clearRect(0,0,width,height);
     var startBg = new Image();
     startBg.src = '/images/background.gif';
