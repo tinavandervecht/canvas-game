@@ -3,6 +3,11 @@
 <head>
     <title>My fancy game</title>
 
+    <?php
+        $token = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 25);
+        setcookie('_token', $token, time() + (86400 * 30), "/");
+    ?>
+
     <style>
         @font-face {
             font-family: 'Triforce';
@@ -374,6 +379,7 @@ document.getElementById('highScoreForm').addEventListener("submit", function(e) 
         var http = new XMLHttpRequest();
         http.open('POST', './store_highscores.php', true);
         http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        http.setRequestHeader("token", "<?php echo $token; ?>");
 
         http.send('username=' + document.getElementById('username').value + '&score=' + score);
 
