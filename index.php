@@ -376,8 +376,10 @@ document.getElementById('highScoreForm').addEventListener("submit", function(e) 
 // should code _ functions
 function checkShouldRemoveUninteractable() {
     for (var i = 0; i < uninteractables.length; i++) {
-        var coversX = (player.x > uninteractables[i].x) && (player.x < uninteractables[i].x + uninteractables[i].width);
-        var coversY = (player.y > uninteractables[i].y) && (player.y < uninteractables[i].y + uninteractables[i].height);
+        var coversX = ((player.x - player.width) > uninteractables[i].x)
+            && ((player.x + player.width) < uninteractables[i].x + uninteractables[i].width);
+        var coversY = ((player.y + player.height) > uninteractables[i].y)
+            && (player.y < uninteractables[i].y + uninteractables[i].height);
         if (coversX && coversY) {
             uninteractables.splice(i, 1);
         }
