@@ -34,6 +34,12 @@
             text-align:center;
         }
 
+        #noUsername {
+            color:#fff;
+            margin-top:3px;
+            font-family:"Return of Ganon";
+        }
+
         .hidden {
             display:none;
         }
@@ -45,11 +51,31 @@
         input:focus {
             outline:none;
         }
+
+        button[type="submit"] {
+            outline: none;
+            border-radius: 0;
+            border: none;
+            padding: 7px;
+            cursor: pointer;
+            background: blue;
+            color: white;
+        }
     </style>
 </head>
 <body>
 
-    <canvas id="canvas" style="border:1px solid #000"></canvas>
+    <div class="game">
+        <canvas id="canvas" style="border:1px solid #000"></canvas>
+        <form id="highScoreForm" class="hidden">
+            <input type="text" id="username" name="username" placeholder="PLAYER NAME" maxlength="3" />
+            <button type="submit">Save Score</button>
+            <p id="noUsername" class="hidden">
+                Please enter a name.
+            </p>
+        </form>
+    </div>
+
     <audio preload="auto" id="titleThemeAudio">
       <source src="audio/title-theme.mp3" type="audio/mpeg">
       <source src="audio/title-theme.ogg" type="audio/ogg">
@@ -115,6 +141,7 @@ var gamePaused            = false;
 var audio                 = true;
 var audioToggleRendered   = true;
 var currentAudioId        = '';
+var showHighScores        = false;
 canvas.width              = width;
 canvas.height             = height;
 var playBtn               = {
@@ -287,6 +314,7 @@ canvas.addEventListener("click", function(e) {
         returnMainMenuBtn = {};
         playBtn = {};
         highScoreBtn = {};
+        showHighScores = true;
         renderHighScoresList();
     }
 
@@ -295,6 +323,7 @@ canvas.addEventListener("click", function(e) {
         returnMainMenuBtn = {};
         playBtn = {};
         highScoreBtn = {};
+        showHighScores = false;
         resetGame();
         loadGame();
     }
@@ -313,7 +342,35 @@ canvas.addEventListener("click", function(e) {
         changeAudioIcon();
     }
 });
+
+document.getElementById('highScoreForm').addEventListener("submit", function(e) {
+    document.getElementById("noUsername").classList.add("hidden");
+    e.preventDefault();
+    if (! document.getElementById("username").value) {
+        document.getElementById("noUsername").classList.remove("hidden");
+    } else {
+        highScores[highScores.length ? highScores.length : 0] = {
+            'userName': document.getElementById('username').value,
+            'score': score
+        };
+
+        var http = new XMLHttpRequest();
+        http.open('POST', './store_highscores.php', true);
+        http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+        http.send('username=' + document.getElementById('username').value + '&score=' + score);
+
+        http.onreadystatechange = function() {
+            if(http.readyState == 4 && http.status == 200) {
+                document.getElementById('highScoreForm').classList.add("hidden");
+                showHighScores = true;
+                renderHighScoresList(true, true);
+            }
+        }
+
+    }
 });
+
 
 // Functions
 // should code _ functions
@@ -958,26 +1015,40 @@ function renderCucco(cucco, posX) {
     }
 }
 
-function renderHighScoresList(animate = true) {
+function renderHighScoresList(animate = true, showSuccess = false) {
     ctx.clearRect(0,0,width,height);
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, width, height);
 
     renderAudioToggle('white');
 
-    ctx.textAlign = 'right';
-    fadeIn('Return to Main Menu', width - 75, 30, 20, 'Return of Ganon', animate, returnMainMenuBtn);
+    if (showSuccess) {
+        ctx.textAlign = 'left';
+        fadeIn('Score successfully saved!', 100, 30, 20, 'Return of Ganon');
+        ctx.textAlign = 'right';
+        fadeIn('Return to Main Menu', width - 75, 30, 20, 'Return of Ganon', animate, returnMainMenuBtn);
+        setTimeout(function(){ renderHighScoresList(false) }, 3000);
+    } else {
+        ctx.textAlign = 'right';
+        fadeIn('Return to Main Menu', width - 75, 30, 20, 'Return of Ganon', animate, returnMainMenuBtn);
+    }
     ctx.textAlign = 'center';
     fadeIn('High Scores', width / 2, 75, 40, 'Triforce', animate);
 
     var xPos = 125;
     for (var i = 0; i < 5; i++) {
         var obj = highScores[i];
-        fadeIn('[' + (i + 1) + ']', 200, xPos - 5, 20, 'Return of Ganon', animate);
-        fadeIn(obj['username'], 250, xPos, 40, 'Return of Ganon', animate);
-        fadeIn(obj['score'], 500, xPos, 40, 'Return of Ganon', animate);
+        if (obj) {
+            fadeIn('[' + (i + 1) + ']', 200, xPos - 5, 20, 'Return of Ganon', animate);
+            fadeIn(obj['username'], 250, xPos, 40, 'Return of Ganon', animate);
+            fadeIn(obj['score'], 500, xPos, 40, 'Return of Ganon', animate);
 
-        xPos = xPos + 50;
+            xPos = xPos + 50;
+        }
+    }
+
+    if (highScores.length === 0) {
+        fadeIn('Seems like there\'s no saved scores yet! Why not be the first?', width / 2, xPos - 5, 20, 'Return of Ganon', animate);
     }
 }
 
