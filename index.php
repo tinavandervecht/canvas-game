@@ -589,12 +589,12 @@ function resetGame() {
     document.getElementById('highScoreForm').classList.add("hidden");
     document.getElementById('hurtAudio').pause();
     document.getElementById('hurtAudio').currentTime = 0;
-    zombifyPlayer();
     player.x = 50;
     player.y = height / 2;
     player.facing = 'right';
     player.health = 3;
     gameLength = 0;
+    continueCountdown = 3;
     gameover = false;
     gameStarted = false;
 }
