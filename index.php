@@ -101,6 +101,7 @@
       <source src="audio/water_temple.ogg" type="audio/ogg">
     </audio>
 
+<script src="/scripts/Font.js"></script>
 <script>
     var getHighScores = <?php echo file_get_contents('./highscores.json'); ?>;
     var highScores = getHighScores.slice(0);
@@ -142,6 +143,18 @@ var audio                 = true;
 var audioToggleRendered   = true;
 var currentAudioId        = '';
 var showHighScores        = false;
+var headerFont            = new Font();
+headerFont.fontFamily     = 'Triforce';
+headerFont.src            = '/fonts/Triforce.eot';
+var bodyFont              = new Font();
+bodyFont.fontFamily       = 'Return of Ganon';
+bodyFont.src              = '/fonts/ReturnOfGanonReg.eot';
+var startBgLoaded         = false;
+var startBg               = new Image();
+startBg.src               = '/images/background.gif';
+startBg.onload = function() {
+    startBgLoaded = true;
+}
 canvas.width              = width;
 canvas.height             = height;
 var playBtn               = {
@@ -171,6 +184,8 @@ var backgroundImage       = {
 }
 backgroundImage.image.src = "/images/water-faded.png";
 
+var enabledAudioImageLoaded = false;
+var disabledAudioImageLoaded = false;
 var audioImage            = {
     enabled: {
         image: new Image()
@@ -185,6 +200,12 @@ var audioImage            = {
 }
 audioImage.enabled.image.src = "/images/audio-enabled-white.png";
 audioImage.disabled.image.src = "/images/audio-disabled-white.png";
+audioImage.enabled.image.onload = function() {
+    enabledAudioImageLoaded = true;
+}
+audioImage.disabled.image.onload = function() {
+    disabledAudioImageLoaded = true;
+}
 
 var heartImage            = {
     image: new Image(),
@@ -579,31 +600,35 @@ function resetGame() {
 }
 
 function loadGame(animate = true) {
-    currentAudioId = 'titleThemeAudio';
-    if (audio) {
-        document.getElementById('titleThemeAudio').play();
-    }
     ctx.clearRect(0,0,width,height);
-    var startBg = new Image();
-    startBg.src = '/images/background.gif';
-    startBg.onload = function() {
+
+    if (headerFont && startBgLoaded && bodyFont && enabledAudioImageLoaded && disabledAudioImageLoaded) {
+        currentAudioId = 'titleThemeAudio';
+        if (audio) {
+            document.getElementById('titleThemeAudio').play();
+        }
+
         ctx.drawImage(startBg, 0, 0, width, height);
         renderAudioToggle();
-    };
 
-    ctx.textAlign = 'center';
-    fadeIn('The Legend of Tina', width / 2, 100, 68, 'Triforce', animate);
-    fadeIn('Best with sound!', width / 2 + 230, 115, 15, 'Return of Ganon', animate);
-    fadeIn('Play', width / 2, 200, 20, 'Return of Ganon', animate, playBtn);
-    fadeIn('High Scores', width / 2, 230, 20, 'Return of Ganon', animate, highScoreBtn);
-    fadeIn(
-        'All icons and verbiage that remind you of Zelda belongs to Nintendo. Pls don\'t sue',
-        width / 2,
-        height - 12,
-        12,
-        'Arial',
-        animate
-    );
+        ctx.textAlign = 'center';
+        fadeIn('The Legend of Tina', width / 2, 100, 68, 'Triforce', animate);
+        fadeIn('Best with sound!', width / 2 + 230, 115, 15, 'Return of Ganon', animate);
+        fadeIn('Play', width / 2, 200, 20, 'Return of Ganon', animate, playBtn);
+        fadeIn('High Scores', width / 2, 230, 20, 'Return of Ganon', animate, highScoreBtn);
+        fadeIn(
+            'All icons and verbiage that remind you of Zelda belongs to Nintendo. Pls don\'t sue',
+            width / 2,
+            height - 12,
+            12,
+            'Arial',
+            animate
+        );
+    } else {
+        window.setTimeout(function() {
+            loadGame();
+        },100);
+    }
 }
 
 // render functions
