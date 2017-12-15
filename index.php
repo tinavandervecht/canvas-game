@@ -130,7 +130,7 @@ var friction              = 0.8;
 var gravity               = 0.005;
 var deathPosition         = 0;
 var bounce                = true;
-var continueCountdown     = 0;
+var continueCountdown     = 3;
 var gameover              = false;
 var uninteractables       = [];
 var uninteractableType    = 'block';
@@ -167,28 +167,24 @@ var returnMainMenuBtn    = {
 var backgroundImage       = {
     image: new Image(),
     x: 0,
-    freeze: false
+    freeze: true
 }
 backgroundImage.image.src = "/images/water-faded.png";
 
 var audioImage            = {
     enabled: {
-        darkImage: new Image(),
-        lightImage: new Image()
+        image: new Image()
     },
     disabled: {
-        darkImage: new Image(),
-        lightImage: new Image()
+        image: new Image()
     },
     left: width - 30,
     right: width - 10,
     top: height - 30,
     bottom: height - 10
 }
-audioImage.enabled.darkImage.src = "/images/audio-enabled.png";
-audioImage.enabled.lightImage.src = "/images/audio-enabled-white.png";
-audioImage.disabled.darkImage.src = "/images/audio-disabled.png";
-audioImage.disabled.lightImage.src = "/images/audio-disabled-white.png";
+audioImage.enabled.image.src = "/images/audio-enabled-white.png";
+audioImage.disabled.image.src = "/images/audio-disabled-white.png";
 
 var heartImage            = {
     image: new Image(),
@@ -228,7 +224,7 @@ var player                = {
     fpsCount: 0,
     facing: 'right',
     health: 3,
-    alive: true
+    alive: false
 };
 player.image.src          = "/images/sprites/link.png";
 player.animations         = {
@@ -350,7 +346,7 @@ document.getElementById('highScoreForm').addEventListener("submit", function(e) 
         document.getElementById("noUsername").classList.remove("hidden");
     } else {
         highScores[highScores.length ? highScores.length : 0] = {
-            'userName': document.getElementById('username').value,
+            'username': document.getElementById('username').value,
             'score': score
         };
 
@@ -359,6 +355,13 @@ document.getElementById('highScoreForm').addEventListener("submit", function(e) 
         http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
         http.send('username=' + document.getElementById('username').value + '&score=' + score);
+
+        var resortedHighScores = highScores.slice(0);
+        resortedHighScores.sort(function(a,b) {
+            return a.score - b.score;
+        });
+        resortedHighScores.reverse();
+        highScores = resortedHighScores;
 
         http.onreadystatechange = function() {
             if(http.readyState == 4 && http.status == 200) {
@@ -493,7 +496,7 @@ function collidesWithBlock(sideToCheck) {
 // moving functions
 function movePlayer(){
     //up and down
-    if (keys[38]) {
+    if (keys[38] || keys[87]) {
         // up arrow
         if (!collidesWithBlock('bottom')) {
             player.velY = 1;
@@ -521,7 +524,7 @@ function movePlayer(){
     }
 
    // left and right
-    if (keys[39]) {
+    if (keys[39] || keys[68]) {
         // right arrow
         player.facing = 'right';
         if (player.velX < player.speed) {
@@ -530,7 +533,7 @@ function movePlayer(){
             }
          }
     }
-    if (keys[37]) {
+    if (keys[37] || keys[65]) {
         // left arrow
         player.facing = 'left';
         if (player.velX > -player.speed) {
@@ -585,7 +588,7 @@ function loadGame(animate = true) {
     startBg.src = '/images/background.gif';
     startBg.onload = function() {
         ctx.drawImage(startBg, 0, 0, width, height);
-        renderAudioToggle('white');
+        renderAudioToggle();
     };
 
     ctx.textAlign = 'center';
@@ -786,19 +789,11 @@ function renderRupees(animateRupees = true) {
     }
 }
 
-function renderAudioToggle(colour) {
+function renderAudioToggle() {
     audioToggleRendered = true;
-    var image = '';
-
-    if (! audio) {
-        image = colour === 'white'
-            ? audioImage.disabled.lightImage
-            : audioImage.disabled.darkImage;
-    } else {
-        image = colour === 'white'
-            ? audioImage.enabled.lightImage
-            : audioImage.enabled.darkImage;
-    }
+    var image = audio
+        ? audioImage.enabled.image
+        : audioImage.disabled.image;
 
     ctx.drawImage(
         image,
@@ -1022,7 +1017,7 @@ function renderHighScoresList(animate = true, showSuccess = false) {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, width, height);
 
-    renderAudioToggle('white');
+    renderAudioToggle();
 
     if (showSuccess) {
         ctx.textAlign = 'left';
