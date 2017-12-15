@@ -112,6 +112,9 @@ var rupees                = [];
 var score                 = 0;
 var gameLength            = 0;
 var gamePaused            = false;
+var audio                 = true;
+var audioToggleRendered   = true;
+var currentAudioId        = '';
 canvas.width              = width;
 canvas.height             = height;
 var playBtn               = {
@@ -140,6 +143,25 @@ var backgroundImage       = {
     freeze: false
 }
 backgroundImage.image.src = "/images/water-faded.png";
+
+var audioImage            = {
+    enabled: {
+        darkImage: new Image(),
+        lightImage: new Image()
+    },
+    disabled: {
+        darkImage: new Image(),
+        lightImage: new Image()
+    },
+    left: width - 30,
+    right: width - 10,
+    top: height - 30,
+    bottom: height - 10
+}
+audioImage.enabled.darkImage.src = "/images/audio-enabled.png";
+audioImage.enabled.lightImage.src = "/images/audio-enabled-white.png";
+audioImage.disabled.darkImage.src = "/images/audio-disabled.png";
+audioImage.disabled.lightImage.src = "/images/audio-disabled-white.png";
 
 var heartImage            = {
     image: new Image(),
@@ -239,6 +261,12 @@ canvas.addEventListener("mousemove", function(e) {
         && (mousePos.y >= returnMainMenuBtn.top && mousePos.y <= returnMainMenuBtn.bottom)) {
             e.target.style.cursor = 'pointer';
     }
+
+    if ((mousePos.x >= audioImage.left && mousePos.x <= audioImage.right)
+        && (mousePos.y >= audioImage.top && mousePos.y <= audioImage.bottom)
+        && audioToggleRendered) {
+            e.target.style.cursor = 'pointer';
+    }
 });
 
 canvas.addEventListener("click", function(e) {
@@ -270,6 +298,21 @@ canvas.addEventListener("click", function(e) {
         resetGame();
         loadGame();
     }
+
+    if ((mousePos.x >= audioImage.left && mousePos.x <= audioImage.right)
+        && (mousePos.y >= audioImage.top && mousePos.y <= audioImage.bottom)
+        && audioToggleRendered) {
+        if (audio) {
+            audio = false;
+            document.getElementById(currentAudioId).pause();
+        } else {
+            audio = true;
+            document.getElementById(currentAudioId).play();
+        }
+
+        changeAudioIcon();
+    }
+});
 });
 
 // Functions
@@ -296,7 +339,10 @@ function checkShouldPauseGame() {
 function startBackgroundAudio() {
     document.getElementById('titleThemeAudio').pause();
     document.getElementById('titleThemeAudio').currentTime = 0;
-    document.getElementById('backgroundAudio').play();
+    currentAudioId = 'backgroundAudio';
+    if (audio) {
+        document.getElementById('backgroundAudio').play();
+    }
 }
 
 function collidesWithCucco() {
@@ -315,7 +361,9 @@ function collidesWithRupee() {
         var x = hitRupeeX(rupees[i]);
         var y = hitRupeeY(rupees[i]);
         if ((x && y) || (player.x == rupees[i].x && player.y == rupees[i].y)) {
-            document.getElementById('getRupeeAudio').play();
+            if (audio) {
+                document.getElementById('getRupeeAudio').play();
+            }
             score += rupeesData.types[rupees[i].type].value;
             rupees.splice(i,1);
         }
@@ -468,26 +516,31 @@ function resetGame() {
     gameStarted = false;
 }
 
-function loadGame() {
-    document.getElementById('titleThemeAudio').play();
+function loadGame(animate = true) {
+    currentAudioId = 'titleThemeAudio';
+    if (audio) {
+        document.getElementById('titleThemeAudio').play();
+    }
     ctx.clearRect(0,0,width,height);
     var startBg = new Image();
     startBg.src = '/images/background.gif';
     startBg.onload = function() {
         ctx.drawImage(startBg, 0, 0, width, height);
+        renderAudioToggle('white');
     };
-    ctx.textAlign = 'center';
 
-    fadeIn('The Legend of Tina', width / 2, 100, 68, 'Triforce');
-    fadeIn('Best with sound!', width / 2 + 230, 115, 15, 'Return of Ganon');
-    fadeIn('Play', width / 2, 200, 20, 'Return of Ganon', playBtn);
-    fadeIn('High Scores', width / 2, 230, 20, 'Return of Ganon', highScoreBtn);
+    ctx.textAlign = 'center';
+    fadeIn('The Legend of Tina', width / 2, 100, 68, 'Triforce', animate);
+    fadeIn('Best with sound!', width / 2 + 230, 115, 15, 'Return of Ganon', animate);
+    fadeIn('Play', width / 2, 200, 20, 'Return of Ganon', animate, playBtn);
+    fadeIn('High Scores', width / 2, 230, 20, 'Return of Ganon', animate, highScoreBtn);
     fadeIn(
         'All icons and verbiage that remind you of Zelda belongs to Nintendo. Pls don\'t sue',
         width / 2,
         height - 12,
         12,
-        'Arial'
+        'Arial',
+        animate
     );
 }
 
@@ -529,10 +582,13 @@ function render() {
         gameLength = 0;
     }
 
-    gameLength++;
+    if (!gameover) {
+        gameLength++;
 
-    renderScore();
-    renderHealth();
+        renderScore();
+        renderHealth();
+        renderAudioToggle();
+    }
 
 }
 
@@ -620,6 +676,7 @@ function renderCountDown() {
 }
 
 function renderGameOverScreen() {
+    audioToggleRendered = false;
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = "#FFFFFF";
@@ -668,6 +725,29 @@ function renderRupees(animateRupees = true) {
     if (randomlyAddChances[Math.floor(Math.random() * randomlyAddChances.length)] && visibleRupees < 5) {
         addRupee();
     }
+}
+
+function renderAudioToggle(colour) {
+    audioToggleRendered = true;
+    var image = '';
+
+    if (! audio) {
+        image = colour === 'white'
+            ? audioImage.disabled.lightImage
+            : audioImage.disabled.darkImage;
+    } else {
+        image = colour === 'white'
+            ? audioImage.enabled.lightImage
+            : audioImage.enabled.darkImage;
+    }
+
+    ctx.drawImage(
+        image,
+        width - 30,
+        height - 30,
+        20,
+        20
+    )
 }
 
 function getAvailableRupeeKeys() {
@@ -754,7 +834,9 @@ function animateCharacter() {
             player.currentFrame = 0;
         }
 
-        document.getElementById('swimmingAudio').play();
+        if (audio) {
+            document.getElementById('swimmingAudio').play();
+        }
 
         player.currentFrame++;
 
@@ -785,7 +867,9 @@ function animateDeathSequence() {
 function killPlayer() {
     document.getElementById('backgroundAudio').pause();
     document.getElementById('backgroundAudio').currentTime = 0;
-    document.getElementById('hurtAudio').play();
+    if (audio) {
+        document.getElementById('hurtAudio').play();
+    }
     player.facing = 'right';
     backgroundImage.freeze = true;
     player.alive = false;
@@ -874,21 +958,24 @@ function renderCucco(cucco, posX) {
     }
 }
 
-function renderHighScoresList() {
+function renderHighScoresList(animate = true) {
     ctx.clearRect(0,0,width,height);
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, width, height);
+
+    renderAudioToggle('white');
+
     ctx.textAlign = 'right';
-    fadeIn('Return to Main Menu', width - 75, 30, 20, 'Return of Ganon', returnMainMenuBtn);
+    fadeIn('Return to Main Menu', width - 75, 30, 20, 'Return of Ganon', animate, returnMainMenuBtn);
     ctx.textAlign = 'center';
-    fadeIn('High Scores', width / 2, 75, 40, 'Triforce');
+    fadeIn('High Scores', width / 2, 75, 40, 'Triforce', animate);
 
     var xPos = 125;
     for (var i = 0; i < 5; i++) {
         var obj = highScores[i];
-        fadeIn('[' + (i + 1) + ']', 200, xPos - 5, 20, 'Return of Ganon');
-        fadeIn(obj['username'], 250, xPos, 40, 'Return of Ganon');
-        fadeIn(obj['score'], 500, xPos, 40, 'Return of Ganon');
+        fadeIn('[' + (i + 1) + ']', 200, xPos - 5, 20, 'Return of Ganon', animate);
+        fadeIn(obj['username'], 250, xPos, 40, 'Return of Ganon', animate);
+        fadeIn(obj['score'], 500, xPos, 40, 'Return of Ganon', animate);
 
         xPos = xPos + 50;
     }
@@ -941,8 +1028,8 @@ function setUninteractableType() {
         : 'block';
 }
 
-function fadeIn(text, x, y, fontSize, font, textVar = null) {
-    var alpha = 0.0,
+function fadeIn(text, x, y, fontSize, font, animate = true, textVar = null) {
+    var alpha = animate ? 0.0 : 1,
         interval = setInterval(function () {
             ctx.font = fontSize + 'px ' + font;
             ctx.fillStyle = "rgba(255, 255, 255, " + alpha + ")";
@@ -973,6 +1060,16 @@ function getMousePos(canvas, evt) {
             y: evt.clientY - rect.top
         };
     }
+
+function changeAudioIcon() {
+    if (gameStarted) {
+
+    } else if(showHighScores) {
+        renderHighScoresList(false);
+    } else {
+        loadGame(false);
+    }
+}
 
 </script>
 </body>
