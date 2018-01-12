@@ -1,6 +1,5 @@
 <?php
-    if ($_SERVER['HTTP_TOKEN'] && $_SERVER['HTTP_TOKEN'] === $_COOKIE['_token']
-        && $_SERVER["REMOTE_ADDR"] === '23.229.197.100') {
+    if ($_SERVER['HTTP_TOKEN'] && $_SERVER['HTTP_TOKEN'] === $_COOKIE['_token']) {
         $highscores = file_get_contents('./highscores.json');
         $highscores = json_decode($highscores, true);
         $highscores[count($highscores)] = $_POST;
